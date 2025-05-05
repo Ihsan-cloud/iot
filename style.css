@@ -1,44 +1,58 @@
-
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
-  font-family: Arial, sans-serif; text-align: center; background: white; color: #000080; }
+  font-family: Arial, sans-serif; text-align: center; background: white; color: #000080;
+}
 
-.container { margin-top: 20px; } .datetime-container { width: 95%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; } .judul {
+.container { margin-top: 20px; }
 
-text-align: center; width: 100%; margin: 2px; padding: 0; font-size: 4em; line-height: 1; cursor: pointer; color: #566D7E; user-select: none; border-bottom: 2px solid transparent; transition: border-color .3s ease; display: inline-block; }
+.datetime-container {
+  width: 95%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden;
+}
 
-.judul:hover { border-color: #0099FF; } .day-display { font-size: 3em; background:#E0E5E5; font-weight: bold; padding: 10px 20px; border: 4px solid black; border-bottom: none; border-radius: 10px 10px 0 0; }
+.judul {
+  text-align: center; width: 100%; margin: 2px; padding: 0; font-size: 4em; line-height: 1; cursor: pointer;
+  color: #566D7E; user-select: none; border-bottom: 2px solid transparent; transition: border-color .3s ease; display: inline-block;
+}
 
-.time-display { font-size: 3.5em; font-weight: bold; padding: 10px 20px; background:#00BFFF; color: white; border: 4px solid black; border-top: none; border-radius: 0 0 10px 10px; }
+.judul:hover { border-color: #0099FF; }
+
+.day-display {
+  font-size: 3em; background:#E0E5E5; font-weight: bold; padding: 10px 20px;
+  border: 4px solid black; border-bottom: none; border-radius: 10px 10px 0 0;
+}
+
+.time-display {
+  font-size: 3.5em; font-weight: bold; padding: 10px 20px; background:#00BFFF; color: white;
+  border: 4px solid black; border-top: none; border-radius: 0 0 10px 10px;
+}
 
 .day-display.sunday { color: red; }
 
 .day-display.friday { color: green; }
 
-.day-display.other { color: black; } .day-display:hover { background: #E0E5E5; }
+.day-display.other { color: black; }
+
+.day-display:hover { background: #E0E5E5; }
 
 .time-display:hover { background: lightgrey; }
 
 .relay-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 100px); /* Ukuran tetap 95px */
+  grid-template-columns: repeat(auto-fit, 100px);
   gap: 20px;
   padding: 8px;
   width: 91%;
   max-width: 600px;
   margin: 5px auto 0;
-  justify-content: center; /* Untuk pusatkan grid */
+  justify-content: center;
 }
 
 .relay {
-  /* Ukuran Tetap */
   width: 95px;
-  min-height: 60px; /* Anda bisa sesuaikan tinggi minimal */
+  min-height: 60px;
   box-sizing: border-box;
-  
-  /* Style Asli Anda */
   position: relative;
   background: #0C090A;
   color: white;
@@ -50,8 +64,6 @@ text-align: center; width: 100%; margin: 2px; padding: 0; font-size: 4em; line-h
   border: 1.5px solid white;
   box-shadow: 0 0 0 3px #483C32;
   margin: 4px;
-  
-  /* Untuk teks panjang */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -61,42 +73,110 @@ text-align: center; width: 100%; margin: 2px; padding: 0; font-size: 4em; line-h
 .relay.on {
   color: #00FFFF;
   border-color: #00FFFF;
-  /* Pertahankan shadow yang sama */
   box-shadow: 0 0 0 4px #483C32;
 }
 
-.hidden { display: block !important; animation: formClose 0.7s ease-out forwards !important; pointer-events: none; }
+.hidden {
+  display: block !important;
+  animation: formClose 0.7s ease-out forwards !important;
+  pointer-events: none;
+}
 
-@keyframes formAppear { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); filter: blur(8px); } 50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); filter: blur(2px); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); } }
+@keyframes formAppear {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); filter: blur(8px); }
+  50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); filter: blur(2px); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+}
 
-@keyframes notificationAppear { 0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); filter: blur(4px); } 50% { opacity: 0.6; transform: translate(-50%, -48%) scale(1.05); filter: blur(1px); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); } }
+@keyframes notificationAppear {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); filter: blur(4px); }
+  50% { opacity: 0.6; transform: translate(-50%, -48%) scale(1.05); filter: blur(1px); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+}
 
-@keyframes notificationClose { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); } 50% { opacity: 0.4; transform: translate(-50%, -48%) scale(0.9); filter: blur(2px); } 100% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); filter: blur(4px); } }
+@keyframes notificationClose {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  50% { opacity: 0.4; transform: translate(-50%, -48%) scale(0.9); filter: blur(2px); }
+  100% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); filter: blur(4px); }
+}
 
-.notification { position: fixed; top: 6%; left: 50%; transform: translate(-50%, -50%); background: #00BFFF; color: white; padding: 15px 45px; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0,0,0,0.2); font-size: 1.2em; border: 2px solid #555; opacity: 0; max-width: 80%; z-index: 1000; animation: none; display: none;
-animation-fill-mode: forwards;}
+.notification {
+  position: fixed; top: 6%; left: 50%; transform: translate(-50%, -50%);
+  background: #00BFFF; color: white; padding: 15px 45px; border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0,0,0,0.2); font-size: 1.2em; border: 2px solid #555;
+  opacity: 0; max-width: 80%; z-index: 1000; animation: none; display: none;
+  animation-fill-mode: forwards;
+}
 
-@keyframes formClose { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); } 50% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); filter: blur(2px); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); filter: blur(6px); } } 
- .warning-message { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: red; color: white; padding: 10px 20px; border-radius: 10px; font-size: 1.2em; animation: blink 3s infinite; }
+@keyframes formClose {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  50% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); filter: blur(2px); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); filter: blur(6px); }
+}
 
-.time-setting, .schedule-setting, .wifi-setting { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #CCFFFF; padding: 30px; border-radius: 15px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2); z-index: 1000; width: 90%; max-width: 400px; text-align: center; font-size: 1.2em; animation: formAppear 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.warning-message {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: red; color: white; padding: 10px 20px; border-radius: 10px;
+  font-size: 1.2em; animation: blink 3s infinite;
+}
 
-.time-setting label, .schedule-setting label, .wifi-setting label { display: block; margin: 10px 0; }
+.schedule-setting {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: #CCFFFF; padding: 30px; border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2); z-index: 1000;
+  width: 90%; max-width: 400px; text-align: center;
+  font-size: 1.2em; animation: formAppear 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
 
-.time-setting input, .time-setting select, .schedule-setting input, .schedule-setting select, .wifi-setting input { font-size: 1em; padding: 5px; width: 100%; max-width: 200px; margin: 5px auto; }
+.schedule-setting label {
+  display: block; margin: 10px 0;
+}
 
-.time-setting button, .schedule-setting button, .wifi-setting button { font-size: 1em; padding: 10px 20px; margin-top: 10px; background: #A24857; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.schedule-setting input,
+.schedule-setting select {
+  font-size: 1em; padding: 5px;
+  width: 100%; max-width: 200px; margin: 5px auto;
+}
 
-.time-setting button:hover, .schedule-setting button:hover, .wifi-setting button:hover { background: #E0E5E5; }
+.schedule-setting button {
+  font-size: 1em; padding: 10px 20px; margin-top: 10px;
+  background: #A24857; color: white; border: none; border-radius: 5px; cursor: pointer;
+}
 
-.schedule-list { margin: 10px auto; padding: 10px; background: greylight; border-radius: 10px; width: 80%; max-width: 400px; }
+.schedule-setting button:hover {
+  background: #E0E5E5;
+}
 
-.schedule-item { padding: 5px; border-bottom: 1px solid #ccc; }
+.schedule-list {
+  margin: 10px auto; padding: 10px; background: greylight;
+  border-radius: 10px; width: 80%; max-width: 400px;
+}
 
-@keyframes blink { 0% { opacity: 1 } 10% { opacity: .8 } 20% { opacity: .6 } 30% { opacity: .4 } 40% { opacity: .2 } 50% { opacity: 0 } 60% { opacity: .2 } 70% { opacity: .4 } 80% { opacity: .6 } 90% { opacity: .8 } 100% { opacity: 1 } }
+.schedule-item {
+  padding: 5px; border-bottom: 1px solid #ccc;
+}
 
-.vertical-text { writing-mode: vertical-lr; text-orientation: upright; position: fixed; right: 10px; top: 50%; transform: translateY(-50%); font-size: 1.2em; padding: 60px 7px; background: #0099FF; color: white; border-radius: 5px; cursor: pointer; height: 150px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+@keyframes blink {
+  0% { opacity: 1 }
+  10% { opacity: .8 }
+  20% { opacity: .6 }
+  30% { opacity: .4 }
+  40% { opacity: .2 }
+  50% { opacity: 0 }
+  60% { opacity: .2 }
+  70% { opacity: .4 }
+  80% { opacity: .6 }
+  90% { opacity: .8 }
+  100% { opacity: 1 }
+}
 
-
-
+.vertical-text {
+  writing-mode: vertical-lr; text-orientation: upright;
+  position: fixed; right: 10px; top: 50%;
+  transform: translateY(-50%); font-size: 1.2em;
+  padding: 60px 7px; background: #0099FF; color: white;
+  border-radius: 5px; cursor: pointer; height: 150px;
+  display: flex; align-items: center; justify-content: center;
+  white-space: nowrap;
+}
 </style>
