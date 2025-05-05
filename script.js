@@ -1,12 +1,12 @@
 // Contoh konfigurasi Firebase dummy. Gantilah dengan konfigurasi Anda sendiri.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-msg-sender-id",
-  appId: "your-app-id"
+  apiKey: ""AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",",
+  authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
+  databaseURL: "https://ihsan-cloud-f3a02-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ihsan-cloud-f3a02",
+  storageBucket: "ihsan-cloud-f3a02.firebaseapp.com",
+  messagingSenderId: "442997712719",
+  appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
 };
 
 // Initialize Firebase
