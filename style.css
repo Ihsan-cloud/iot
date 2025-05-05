@@ -1,3 +1,5 @@
+<head>
+<style>
 <body>
 <div class="container">
 <h1 class="judul" onclick="toggleForm('wifi')">SWITCH</h1>
@@ -50,3 +52,5 @@
       <div class="vertical-text" onclick="closeScheduleList()">TUTUP</div>
     </div>
   </div>
+<style>
+<head>
