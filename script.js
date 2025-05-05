@@ -1,4 +1,4 @@
-// Firebase Configuration
+
 const firebaseConfig = {
   apiKey: "AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",
   authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
