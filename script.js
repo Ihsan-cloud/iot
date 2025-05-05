@@ -1,138 +1,129 @@
-// Contoh konfigurasi Firebase dummy. Gantilah dengan konfigurasi Anda sendiri.
-const firebaseConfig = {
-  apiKey: ""AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",",
-  authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
-  databaseURL: "https://ihsan-cloud-f3a02-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ihsan-cloud-f3a02",
-  storageBucket: "ihsan-cloud-f3a02.firebaseapp.com",
-  messagingSenderId: "442997712719",
-  appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// Show notification function
 function showNotification(message) {
   const notif = document.getElementById('notification');
   if (!notif) return;
+
   notif.textContent = message;
   notif.style.display = 'block';
   notif.style.animation = 'notificationAppear 0.6s ease-out forwards';
-  clearTimeout(notif.hideTimeout);
-  notif.hideTimeout = setTimeout(() => {
+
+  setTimeout(() => {
     notif.style.animation = 'notificationClose 0.6s ease-in forwards';
     notif.addEventListener('animationend', () => {
       notif.style.display = 'none';
     }, { once: true });
-  }, 6000);
+  }, 5000); // total 4 detik
 }
 
-// Toggle relay state in Firebase Realtime Database
 function toggleRelay(id) {
-  const ref = db.ref('relayStatus/relay' + id);
-  ref.transaction(currentState => {
-    if (currentState === "ON") return "OFF";
-    return "ON";
-  }, (error, committed, snapshot) => {
-    if (error) {
-      console.error("Failed to toggle relay:", error);
-      showNotification("Gagal mengganti status relay");
-    } else if (!committed) {
-      showNotification("Toggle tidak berhasil");
-    } else {
-      const state = snapshot.val();
-      const e = document.getElementById('relay' + id);
-      if(e) e.classList.toggle('on', state === "ON");
-      showNotification(`${e ? e.dataset.name : 'Relay'} ${state === "ON" ? "Menyala" : "Mati"}`);
-    }
-  });
+  fetch(`/control?relay${id}=TOGGLE`)
+    .then(r => {
+      if(!r.ok) throw Error("Gagal");
+      return r.text();
+    })
+    .then(s => {
+      let e = document.getElementById(`relay${id}`);
+      e.classList.toggle('on', s === "ON");
+      showNotification(`${e.dataset.name} ${s === "ON" ? "Menyala" : "Mati"}`);
+    })
+    .catch(e => console.error("Error:", e));
 }
 
-// Update relay status realtime listener
-function updateRelayStatus() {
-  const relayStatusRef = db.ref('relayStatus');
-  relayStatusRef.on('value', snapshot => {
-    const data = snapshot.val() || {};
-    for (let i = 0; i < 5; i++) {
-      const e = document.getElementById('relay' + i);
-      const status = data[`relay${i}`];
-      if(e) e.classList.toggle('on', status === "ON");
-    }
-  });
-}
-
-// Update time display with realtime Firebase data
 function updateTime() {
-  const timeRef = db.ref('time');
-  timeRef.on('value', snapshot => {
-    const d = snapshot.val();
-    if (!d) return;
-    const formattedTime = `${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}:${String(d.second).padStart(2, '0')}`;
-    const timeElem = document.getElementById('time');
-    if(timeElem) timeElem.innerText = formattedTime;
-    updateDayDisplay(d.day);
-  });
+  fetch('/getTime')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('time').innerText = `${d.hour}:${d.minute}:${d.second}`;
+      updateDayDisplay(d.day);
+    })
+    .catch(e => console.error("Gagal memperbarui waktu:", e));
 }
 
-// Update day display style
 function updateDayDisplay(day) {
-  const e = document.getElementById('day-display');
-  if(!e) return;
-  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"];
-  e.innerText = days[day] || '--';
-  e.className = 'day-display';
+  let e = document.getElementById('day-display');
+  let n = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"];
+  e.innerText = n[day];
+  e.className = "day-display";
   if(day === 0) e.classList.add('sunday');
   else if(day === 5) e.classList.add('friday');
   else e.classList.add('other');
 }
 
-// WiFi settings submit to Firebase
-function submitWiFiForm(event) {
-  if(event) event.preventDefault();
-  let ssidInput = document.getElementById('wifi-ssid');
-  let passwordInput = document.getElementById('wifi-password');
-  if(!ssidInput || !passwordInput) return;
 
-  let ssid = ssidInput.value.trim();
-  let password = passwordInput.value;
-
-  if(!ssid) {
-    showNotification("SSID tidak boleh kosong");
-    return;
-  }
-
-  const wifiRef = db.ref('wifiSettings');
-  wifiRef.set({ ssid, password })
-    .then(() => {
-      showNotification("Pengaturan WiFi berhasil disimpan");
-      if (ssidInput) ssidInput.value = "";
-      if (passwordInput) passwordInput.value = "";
-    })
-    .catch(e => {
-      console.error('Gagal menyimpan WiFi:', e);
-      showNotification("Gagal menyimpan WiFi");
-    });
-}
-
-// Optional: Function to update schedules from Firebase
-function updateSchedules() {
-  const schedulesRef = db.ref('schedules');
-  schedulesRef.on('value', snapshot => {
-    const data = snapshot.val() || { schedules: [] };
-    let listHTML = '';
-    if(Array.isArray(data.schedules)){
-      data.schedules.forEach(item => {
-        listHTML += `<div class="schedule-item">${item}</div>`;
-      });
-    }
-    const listElem = document.getElementById('schedule-list');
-    if(listElem) listElem.innerHTML = listHTML;
+function submitWiFiForm() {
+  let ssid = document.getElementById('wifi-ssid').value;
+  let password = document.getElementById('wifi-password').value;
+  
+  fetch(`/setWiFi`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ssid: ssid, password: password})
+  })
+  .then(response => {
+    if(!response.ok) throw Error('Gagal mengirim data WiFi');
+   // showNotification('Pengaturan WiFi berhasil disimpan');
+ 
+    toggleWiFiForm();
+  })
+  .catch(e => {
+    console.error(e);
+    showNotification('BERHASIL! IP. http://192.168.1.6/');
   });
 }
 
-// Toggle forms - keep your existing implementation or adapt if needed
+function hideWarningMessage() {
+  let e = document.getElementById('warning-message');
+  if(e) e.remove();
+}
+
+function updateRelayStatus() {
+  fetch('/getRelayStatus')
+    .then(r => {
+      if(!r.ok) throw Error("Gagal mengambil status relay");
+      return r.json();
+    })
+    .then(d => {
+      for(let i = 0; i < 5; i++) {
+        let e = document.getElementById(`relay${i}`);
+        let s = d[`relay${i}`];
+        e.classList.toggle('on', s === "ON");
+      }
+    })
+    .catch(e => console.error("Gagal memperbarui status relay:", e));
+}
+
+function setWiFi() {
+  let ssid = document.getElementById('ssid').value;
+  let pass = document.getElementById('password').value;
+
+  fetch(`/setWiFi?ssid=${encodeURIComponent(ssid)}&password=${encodeURIComponent(pass)}`)
+  .then(() => {
+    const form = document.getElementById('wifi-setting');
+    form.style.animation = 'formClose 0.6s forwards';
+    form.addEventListener('animationend', () => {
+      form.classList.add('hidden');
+      showNotification("WiFi berhasil disimpan!");
+    }, { once: true });
+  })
+  .catch(e => {
+    console.error("Gagal menyimpan WiFi:", e);
+    showNotification("Gagal menyimpan WiFi");
+  });
+}
+
+
+function updateSchedules() {
+  fetch('/getNextSchedules')
+    .then(r => r.json())
+    .then(d => {
+      let s = '';
+      d.schedules.forEach(i => {
+        s += `<div class="schedule-item">${i}</div>`;
+      });
+      document.getElementById('schedule-list').innerHTML = s;
+    })
+    .catch(e => console.error("Gagal memperbarui jadwal:", e));
+}
+
 function toggleForm(formType, action = 'toggle') {
   const formIds = {
     wifi: 'wifi-setting',
@@ -147,12 +138,15 @@ function toggleForm(formType, action = 'toggle') {
     updateSchedules();
   }
 
+  // Jika ingin menutup form
   if (action === 'close' || !form.classList.contains('hidden')) {
     form.style.animation = 'formClose 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards';
     form.addEventListener('animationend', () => {
       form.classList.add('hidden');
     }, { once: true });
-  } else {
+  } 
+  // Jika ingin membuka form
+  else {
     form.classList.remove('hidden');
     form.style.animation = 'formAppear 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards';
   }
@@ -161,21 +155,10 @@ function toggleForm(formType, action = 'toggle') {
 function closeScheduleList() {
   toggleForm('schedule', 'close');
 }
+setInterval(updateTime, 1000);
+setInterval(updateRelayStatus, 1000);
+setInterval(updateSchedules, 900000);
 
-// Initialization - adding event listeners and starting realtime listeners
-function init() {
-  for(let i=0; i<5; i++){
-    const relayElem = document.getElementById('relay' + i);
-    if(relayElem) relayElem.addEventListener('click', () => toggleRelay(i));
-  }
-
-  const wifiForm = document.getElementById('wifi-setting');
-  if(wifiForm) wifiForm.addEventListener('submit', submitWiFiForm);
-
-  updateRelayStatus();
-  updateTime();
-  updateSchedules();
-}
-
-// Wait DOM ready to start init
-document.addEventListener('DOMContentLoaded', init);
+updateTime();
+updateRelayStatus();
+updateSchedules();
