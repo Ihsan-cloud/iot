@@ -1,13 +1,14 @@
 // Konfigurasi Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",
+  authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
+  databaseURL: "https://ihsan-cloud-f3a02-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ihsan-cloud-f3a02",
+  storageBucket: "ihsan-cloud-f3a02.firebasestorage.app",
+  messagingSenderId: "442997712719",
+  appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
 };
+
 
 // Inisialisasi Firebase
 firebase.initializeApp(firebaseConfig);
