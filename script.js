@@ -4,11 +4,10 @@ const firebaseConfig = {
   authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
   databaseURL: "https://ihsan-cloud-f3a02-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "ihsan-cloud-f3a02",
-  storageBucket: "ihsan-cloud-f3a02.firebasestorage.app",
+  storageBucket: "ihsan-cloud-f3a02.appspot.com",
   messagingSenderId: "442997712719",
   appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
 };
-
 
 // Inisialisasi Firebase
 firebase.initializeApp(firebaseConfig);
@@ -27,25 +26,28 @@ function init() {
   setInterval(checkConnection, 30000);
 }
 
-// Cek koneksi internet
-async function checkConnection() {
-  try {
-    const response = await fetch('/checkInternet');
-    if (!response.ok) throw new Error("Network response was not ok");
-    
-    const data = await response.json();
-    isOnline = data.connected;
-    updateConnectionUI(isOnline);
-    
-    if (isOnline) {
-      showNotification("Terhubung dengan Cloud Firebase");
-    } else {
-      showNotification("Mode Offline - Menggunakan Koneksi Lokal");
-    }
-  } catch (error) {
-    console.error("Error checking connection:", error);
-    isOnline = false;
-    updateConnectionUI(false);
+// Cek koneksi internet (versi sederhana)
+function checkConnection() {
+  isOnline = navigator.onLine;
+  updateConnectionUI(isOnline);
+  
+  if (isOnline) {
+    showNotification("Terhubung dengan Cloud Firebase");
+    // Sinkronkan status relay saat online
+    database.ref('relays/status').once('value').then(snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        for (let i = 0; i < 5; i++) {
+          const element = document.getElementById(`relay${i}`);
+          if (element && data[`relay${i}`] !== undefined) {
+            element.classList.toggle('on', data[`relay${i}`]);
+            relayStates[i] = data[`relay${i}`];
+          }
+        }
+      }
+    });
+  } else {
+    showNotification("Mode Offline - Tidak bisa kontrol cloud");
   }
 }
 
@@ -58,26 +60,15 @@ function updateConnectionUI(connected) {
   text.textContent = connected ? 'Cloud Connected' : 'Offline Mode';
 }
 
-// Kontrol relay
+// Kontrol relay (Firebase-only)
 async function toggleRelay(relayId) {
   const relayElement = document.getElementById(`relay${relayId}`);
   const deviceName = relayElement.dataset.name;
   
   try {
-    if (isOnline) {
-      // Kontrol via Firebase
-      const newState = !relayElement.classList.contains('on');
-      await database.ref(`relays/control/relay${relayId}`).set(newState);
-      showNotification(`${deviceName} ${newState ? "Menyala" : "Mati"} (Cloud)`);
-    } else {
-      // Kontrol via API lokal
-      const response = await fetch(`/control?relay${relayId}=TOGGLE`);
-      if (!response.ok) throw new Error("Gagal kontrol lokal");
-      
-      const status = await response.text();
-      relayElement.classList.toggle('on', status === "ON");
-      showNotification(`${deviceName} ${status === "ON" ? "Menyala" : "Mati"} (Lokal)`);
-    }
+    const newState = !relayElement.classList.contains('on');
+    await database.ref(`relays/control/relay${relayId}`).set(newState);
+    showNotification(`${deviceName} ${newState ? "Menyala" : "Mati"} (Cloud)`);
   } catch (error) {
     console.error(`Error controlling relay ${relayId}:`, error);
     showNotification(`Gagal mengontrol ${deviceName}`);
@@ -102,27 +93,19 @@ function initFirebaseListeners() {
 
   // Data jadwal
   database.ref('schedules').on('value', (snapshot) => {
-    if (isOnline) {
-      updateSchedulesUI(snapshot.val());
-    }
+    updateSchedulesUI(snapshot.val());
   });
 }
 
-// Update tampilan waktu
+// Update tampilan waktu (versi lokal)
 function updateTime() {
-  fetch('/getTime')
-    .then(response => {
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    })
-    .then(data => {
-      document.getElementById('time').textContent = 
-        `${data.hour}:${data.minute < 10 ? '0' : ''}${data.minute}:${data.second < 10 ? '0' : ''}${data.second}`;
-      updateDayDisplay(data.day);
-    })
-    .catch(error => {
-      console.error("Error updating time:", error);
-    });
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  
+  document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
+  updateDayDisplay(now.getDay());
 }
 
 // Update tampilan hari
@@ -176,53 +159,6 @@ function showNotification(message) {
       notif.style.display = 'none';
     }, { once: true });
   }, 5000);
-}
-
-// Toggle tampilan jadwal
-function toggleSchedule() {
-  const schedulePanel = document.getElementById('schedule-setting');
-  schedulePanel.classList.toggle('hidden');
-  
-  if (!schedulePanel.classList.contains('hidden')) {
-    updateSchedules();
-  }
-}
-
-function closeScheduleList() {
-  document.getElementById('schedule-setting').classList.add('hidden');
-}
-
-// Load data jadwal
-function updateSchedules() {
-  if (isOnline) {
-    database.ref('schedules').once('value')
-      .then(snapshot => updateSchedulesUI(snapshot.val()))
-      .catch(error => {
-        console.error("Firebase schedules error:", error);
-        fetchLocalSchedules();
-      });
-  } else {
-    fetchLocalSchedules();
-  }
-}
-
-// Fallback ke jadwal lokal
-function fetchLocalSchedules() {
-  fetch('/getNextSchedules')
-    .then(response => {
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    })
-    .then(data => {
-      let htmlContent = '';
-      data.schedules.forEach(item => {
-        htmlContent += `<div class="schedule-item">${item}</div>`;
-      });
-      document.getElementById('schedule-list').innerHTML = htmlContent;
-    })
-    .catch(error => {
-      console.error("Error fetching local schedules:", error);
-    });
 }
 
 // Inisialisasi aplikasi
