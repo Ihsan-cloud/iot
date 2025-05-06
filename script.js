@@ -1,4 +1,3 @@
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",
   authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
@@ -9,11 +8,10 @@ const firebaseConfig = {
   appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Fungsi Notifikasi
+// Notifikasi
 function showNotification(message) {
   const notif = document.getElementById('notification');
   if (!notif) return;
@@ -30,7 +28,7 @@ function showNotification(message) {
   }, 5000);
 }
 
-// Fungsi Toggle Relay
+// Toggle Relay
 function toggleRelay(id) {
   const relayRef = database.ref(`relays/relay${id}`);
   
@@ -51,7 +49,7 @@ function toggleRelay(id) {
   });
 }
 
-// Fungsi Update Waktu
+// Update Waktu
 function updateTime() {
   const timeRef = database.ref('time');
   
@@ -64,7 +62,7 @@ function updateTime() {
   });
 }
 
-// Fungsi Tampilan Hari
+// Tampilan Hari
 function updateDayDisplay(day) {
   let e = document.getElementById('day-display');
   if (!e) return;
@@ -78,35 +76,13 @@ function updateDayDisplay(day) {
   else e.classList.add('other');
 }
 
-// Fungsi Submit WiFi Form
-function submitWiFiForm() {
-  let ssid = document.getElementById('wifi-ssid').value;
-  let password = document.getElementById('wifi-password').value;
-  
-  if (!ssid || !password) {
-    showNotification('SSID dan Password tidak boleh kosong');
-    return;
-  }
-  
-  database.ref('wifi').set({
-    ssid: ssid,
-    password: password
-  }).then(() => {
-    toggleWiFiForm();
-    showNotification('Pengaturan WiFi berhasil disimpan');
-  }).catch(e => {
-    console.error(e);
-    showNotification('Gagal menyimpan pengaturan WiFi');
-  });
-}
-
-// Fungsi Hide Warning Message
+// Hide Warning
 function hideWarningMessage() {
   let e = document.getElementById('warning-message');
   if(e) e.remove();
 }
 
-// Fungsi Update Relay Status
+// Update Relay Status
 function updateRelayStatus() {
   const relaysRef = database.ref('relays');
   
@@ -124,35 +100,7 @@ function updateRelayStatus() {
   });
 }
 
-// Fungsi Set WiFi (Alternatif)
-function setWiFi() {
-  let ssid = document.getElementById('ssid').value;
-  let pass = document.getElementById('password').value;
-
-  if (!ssid || !pass) {
-    showNotification('SSID dan Password tidak boleh kosong');
-    return;
-  }
-  
-  database.ref('wifi').set({
-    ssid: ssid,
-    password: pass
-  }).then(() => {
-    const form = document.getElementById('wifi-setting');
-    if (form) {
-      form.style.animation = 'formClose 0.6s forwards';
-      form.addEventListener('animationend', () => {
-        form.classList.add('hidden');
-        showNotification("WiFi berhasil disimpan!");
-      }, { once: true });
-    }
-  }).catch(e => {
-    console.error("Gagal menyimpan WiFi:", e);
-    showNotification("Gagal menyimpan WiFi");
-  });
-}
-
-// Fungsi Update Schedules
+// Update Schedules
 function updateSchedules() {
   const schedulesRef = database.ref('schedules');
   
@@ -171,11 +119,9 @@ function updateSchedules() {
   });
 }
 
-// Fungsi Toggle Form
+// Toggle Form (hanya jadwal)
 function toggleForm(formType, action = 'toggle') {
   const formIds = {
-    wifi: 'wifi-setting',
-    time: 'time-settings',
     schedule: 'schedule-setting'
   };
 
@@ -197,49 +143,30 @@ function toggleForm(formType, action = 'toggle') {
   }
 }
 
-// Fungsi Close Schedule List
+// Close Schedule
 function closeScheduleList() {
   toggleForm('schedule', 'close');
 }
 
-// Fungsi Toggle WiFi Form
-function toggleWiFiForm() {
-  const form = document.getElementById('wifi-setting');
-  if (!form) return;
-
-  if (form.classList.contains('hidden')) {
-    form.classList.remove('hidden');
-    form.style.animation = 'formAppear 0.6s forwards';
-  } else {
-    form.style.animation = 'formClose 0.6s forwards';
-    form.addEventListener('animationend', () => {
-      form.classList.add('hidden');
-    }, { once: true });
-  }
-}
-
-// Inisialisasi saat DOM siap
+// DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
-  // Setup Firebase listeners
   updateTime();
   updateRelayStatus();
   updateSchedules();
-  
-  // Setup interval untuk backup (jika diperlukan)
+
   setInterval(() => {
     const timeEl = document.getElementById('time');
     if (timeEl && !timeEl.textContent) {
       updateTime();
     }
   }, 1000);
-  
+
   setInterval(() => {
     const scheduleList = document.getElementById('schedule-list');
     if (scheduleList && !scheduleList.innerHTML) {
       updateSchedules();
     }
   }, 900000);
-  
-  // Hide warning message setelah 5 detik
+
   setTimeout(hideWarningMessage, 5000);
 });
