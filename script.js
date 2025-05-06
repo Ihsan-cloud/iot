@@ -1,17 +1,166 @@
+// Konfigurasi Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyB9-JkNWyY2tWDFH3O25I1iK7ANoL6zg-0",
-  authDomain: "ihsan-cloud-f3a02.firebaseapp.com",
-  databaseURL: "https://ihsan-cloud-f3a02-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ihsan-cloud-f3a02",
-  storageBucket: "ihsan-cloud-f3a02.firebasestorage.app",
-  messagingSenderId: "442997712719",
-  appId: "1:442997712719:web:de3ef3dc4cbb5b5925873a"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
+// Inisialisasi Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Notifikasi
+// Variabel status
+let isOnline = false;
+let relayStates = [false, false, false, false, false];
+
+// Fungsi inisialisasi
+function init() {
+  checkConnection();
+  initFirebaseListeners();
+  updateTime();
+  setInterval(updateTime, 1000);
+  setInterval(checkConnection, 30000);
+}
+
+// Cek koneksi internet
+async function checkConnection() {
+  try {
+    const response = await fetch('/checkInternet');
+    if (!response.ok) throw new Error("Network response was not ok");
+    
+    const data = await response.json();
+    isOnline = data.connected;
+    updateConnectionUI(isOnline);
+    
+    if (isOnline) {
+      showNotification("Terhubung dengan Cloud Firebase");
+    } else {
+      showNotification("Mode Offline - Menggunakan Koneksi Lokal");
+    }
+  } catch (error) {
+    console.error("Error checking connection:", error);
+    isOnline = false;
+    updateConnectionUI(false);
+  }
+}
+
+// Update tampilan status koneksi
+function updateConnectionUI(connected) {
+  const badge = document.getElementById('connection-badge');
+  const text = document.getElementById('connection-text');
+  
+  badge.className = connected ? 'connection-status online-status' : 'connection-status offline-status';
+  text.textContent = connected ? 'Cloud Connected' : 'Offline Mode';
+}
+
+// Kontrol relay
+async function toggleRelay(relayId) {
+  const relayElement = document.getElementById(`relay${relayId}`);
+  const deviceName = relayElement.dataset.name;
+  
+  try {
+    if (isOnline) {
+      // Kontrol via Firebase
+      const newState = !relayElement.classList.contains('on');
+      await database.ref(`relays/control/relay${relayId}`).set(newState);
+      showNotification(`${deviceName} ${newState ? "Menyala" : "Mati"} (Cloud)`);
+    } else {
+      // Kontrol via API lokal
+      const response = await fetch(`/control?relay${relayId}=TOGGLE`);
+      if (!response.ok) throw new Error("Gagal kontrol lokal");
+      
+      const status = await response.text();
+      relayElement.classList.toggle('on', status === "ON");
+      showNotification(`${deviceName} ${status === "ON" ? "Menyala" : "Mati"} (Lokal)`);
+    }
+  } catch (error) {
+    console.error(`Error controlling relay ${relayId}:`, error);
+    showNotification(`Gagal mengontrol ${deviceName}`);
+  }
+}
+
+// Listener Firebase untuk update realtime
+function initFirebaseListeners() {
+  // Status relay
+  database.ref('relays/status').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    
+    for (let i = 0; i < 5; i++) {
+      const element = document.getElementById(`relay${i}`);
+      if (element && data[`relay${i}`] !== undefined) {
+        element.classList.toggle('on', data[`relay${i}`]);
+        relayStates[i] = data[`relay${i}`];
+      }
+    }
+  });
+
+  // Data jadwal
+  database.ref('schedules').on('value', (snapshot) => {
+    if (isOnline) {
+      updateSchedulesUI(snapshot.val());
+    }
+  });
+}
+
+// Update tampilan waktu
+function updateTime() {
+  fetch('/getTime')
+    .then(response => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('time').textContent = 
+        `${data.hour}:${data.minute < 10 ? '0' : ''}${data.minute}:${data.second < 10 ? '0' : ''}${data.second}`;
+      updateDayDisplay(data.day);
+    })
+    .catch(error => {
+      console.error("Error updating time:", error);
+    });
+}
+
+// Update tampilan hari
+function updateDayDisplay(day) {
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"];
+  const dayElement = document.getElementById('day-display');
+  
+  dayElement.textContent = days[day];
+  dayElement.className = "day-display";
+  
+  if (day === 0) dayElement.classList.add('sunday');
+  else if (day === 5) dayElement.classList.add('friday');
+  else dayElement.classList.add('other');
+}
+
+// Update tampilan jadwal
+function updateSchedulesUI(schedulesData) {
+  const scheduleList = document.getElementById('schedule-list');
+  let htmlContent = '';
+  
+  if (schedulesData && schedulesData.schedules) {
+    schedulesData.schedules.forEach(item => {
+      const timeStr = `${item.hour}:${item.minute < 10 ? '0' : ''}${item.minute}`;
+      const action = item.action === "ON" ? "Menyalakan" : "Mematikan";
+      const device = getDeviceName(item.relay);
+      htmlContent += `<div class="schedule-item">${action} ${device} pada jam ${timeStr}</div>`;
+    });
+  }
+  
+  scheduleList.innerHTML = htmlContent;
+}
+
+// Helper: get device name
+function getDeviceName(relayIndex) {
+  const devices = ["Lampu", "Kipas", "Nyamuk", "LED", "Stop Kontak"];
+  return devices[relayIndex] || "Perangkat";
+}
+
+// Tampilkan notifikasi
 function showNotification(message) {
   const notif = document.getElementById('notification');
   if (!notif) return;
@@ -28,145 +177,52 @@ function showNotification(message) {
   }, 5000);
 }
 
-// Toggle Relay
-function toggleRelay(id) {
-  const relayRef = database.ref(`relays/relay${id}`);
+// Toggle tampilan jadwal
+function toggleSchedule() {
+  const schedulePanel = document.getElementById('schedule-setting');
+  schedulePanel.classList.toggle('hidden');
   
-  relayRef.transaction(currentState => {
-    return currentState === "ON" ? "OFF" : "ON";
-  }).then(() => {
-    relayRef.once('value').then(snapshot => {
-      const state = snapshot.val();
-      let e = document.getElementById(`relay${id}`);
-      if (e) {
-        e.classList.toggle('on', state === "ON");
-        showNotification(`${e.dataset.name} ${state === "ON" ? "Menyala" : "Mati"}`);
-      }
-    });
-  }).catch(e => {
-    console.error("Error:", e);
-    showNotification("Gagal mengontrol relay");
-  });
-}
-
-// Update Waktu
-function updateTime() {
-  const timeRef = database.ref('time');
-  
-  timeRef.on('value', (snapshot) => {
-    const d = snapshot.val();
-    if (d) {
-      document.getElementById('time').innerText = `${d.hour}:${d.minute}:${d.second}`;
-      updateDayDisplay(d.day);
-    }
-  });
-}
-
-// Tampilan Hari
-function updateDayDisplay(day) {
-  let e = document.getElementById('day-display');
-  if (!e) return;
-  
-  let n = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"];
-  e.innerText = n[day];
-  e.className = "day-display";
-  
-  if(day === 0) e.classList.add('sunday');
-  else if(day === 5) e.classList.add('friday');
-  else e.classList.add('other');
-}
-
-// Hide Warning
-function hideWarningMessage() {
-  let e = document.getElementById('warning-message');
-  if(e) e.remove();
-}
-
-// Update Relay Status
-function updateRelayStatus() {
-  const relaysRef = database.ref('relays');
-  
-  relaysRef.on('value', (snapshot) => {
-    const d = snapshot.val();
-    if (d) {
-      for(let i = 0; i < 5; i++) {
-        let e = document.getElementById(`relay${i}`);
-        if (e) {
-          let s = d[`relay${i}`];
-          e.classList.toggle('on', s === "ON");
-        }
-      }
-    }
-  });
-}
-
-// Update Schedules
-function updateSchedules() {
-  const schedulesRef = database.ref('schedules');
-  
-  schedulesRef.on('value', (snapshot) => {
-    const d = snapshot.val();
-    if (d && d.schedules) {
-      let s = '';
-      d.schedules.forEach(i => {
-        s += `<div class="schedule-item">${i}</div>`;
-      });
-      const scheduleList = document.getElementById('schedule-list');
-      if (scheduleList) {
-        scheduleList.innerHTML = s;
-      }
-    }
-  });
-}
-
-// Toggle Form (hanya jadwal)
-function toggleForm(formType, action = 'toggle') {
-  const formIds = {
-    schedule: 'schedule-setting'
-  };
-
-  const form = document.getElementById(formIds[formType]);
-  if (!form) return;
-
-  if (formType === 'schedule' && action === 'open') {
+  if (!schedulePanel.classList.contains('hidden')) {
     updateSchedules();
   }
+}
 
-  if (action === 'close' || !form.classList.contains('hidden')) {
-    form.style.animation = 'formClose 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards';
-    form.addEventListener('animationend', () => {
-      form.classList.add('hidden');
-    }, { once: true });
+function closeScheduleList() {
+  document.getElementById('schedule-setting').classList.add('hidden');
+}
+
+// Load data jadwal
+function updateSchedules() {
+  if (isOnline) {
+    database.ref('schedules').once('value')
+      .then(snapshot => updateSchedulesUI(snapshot.val()))
+      .catch(error => {
+        console.error("Firebase schedules error:", error);
+        fetchLocalSchedules();
+      });
   } else {
-    form.classList.remove('hidden');
-    form.style.animation = 'formAppear 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards';
+    fetchLocalSchedules();
   }
 }
 
-// Close Schedule
-function closeScheduleList() {
-  toggleForm('schedule', 'close');
+// Fallback ke jadwal lokal
+function fetchLocalSchedules() {
+  fetch('/getNextSchedules')
+    .then(response => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
+    .then(data => {
+      let htmlContent = '';
+      data.schedules.forEach(item => {
+        htmlContent += `<div class="schedule-item">${item}</div>`;
+      });
+      document.getElementById('schedule-list').innerHTML = htmlContent;
+    })
+    .catch(error => {
+      console.error("Error fetching local schedules:", error);
+    });
 }
 
-// DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-  updateTime();
-  updateRelayStatus();
-  updateSchedules();
-
-  setInterval(() => {
-    const timeEl = document.getElementById('time');
-    if (timeEl && !timeEl.textContent) {
-      updateTime();
-    }
-  }, 1000);
-
-  setInterval(() => {
-    const scheduleList = document.getElementById('schedule-list');
-    if (scheduleList && !scheduleList.innerHTML) {
-      updateSchedules();
-    }
-  }, 900000);
-
-  setTimeout(hideWarningMessage, 5000);
-});
+// Inisialisasi aplikasi
+document.addEventListener('DOMContentLoaded', init);
