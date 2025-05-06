@@ -1,54 +1,31 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="style.css"> 
-<script src="script.js"></script><body>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script><div class="container">
-<h1 class="judul" onclick="toggleForm('wifi')">SWITCH</h1>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="script.js"></script>
+<body>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <div class="container">
+    <h1 class="judul">SWITCH</h1>
+    
     <div class="datetime-container">
-  <div class="day-display" id="day-display"onclick="toggleForm('schedule')">Minggu</div>
-  <div class="time-display" id="time"onclick="toggleForm('time')">00:00:00</div>
-</div><div class="relay-grid">
+      <div class="day-display" id="day-display" onclick="toggleForm('schedule')">Minggu</div>
+      <div class="time-display" id="time">00:00:00</div>
+    </div>
+
+    <div class="relay-grid">
       <div class="relay" id="relay0" data-name="Lampu" onclick="toggleRelay(0)">Lampu</div>
       <div class="relay" id="relay1" data-name="Kipas" onclick="toggleRelay(1)">Kipas</div>
       <div class="relay" id="relay2" data-name="Nyamuk" onclick="toggleRelay(2)">Nyamuk</div>
       <div class="relay" id="relay3" data-name="Led" onclick="toggleRelay(3)">LED</div>
       <div class="relay" id="relay4" data-name="Stop Kontak" onclick="toggleRelay(4)">Stop Kontak</div>
     </div>
+
     <div id="notification" class="notification"></div>
-    <div id="time-settings" class="time-setting hidden">
-      <label>Hari:
-        <select id="day">
-          <option value="0">Minggu</option>
-          <option value="1">Senin</option>
-          <option value="2">Selasa</option>
-          <option value="3">Rabu</option>
-          <option value="4">Kamis</option>
-          <option value="5">Jum'at</option>
-          <option value="6">Sabtu</option>
-        </select>
-      </label>
-      <label>Jam:
-        <input type="number" id="hour" min="0" max="23">
-      </label>
-      <label>Menit:
-        <input type="number" id="minute" min="0" max="59">
-      </label>
-      <button onclick="toggleForm('time', 'close')">CANCEL</button>
-      <button onclick="setTime()">SET WAKTU</button>
-    </div>
-    
-    <div id="wifi-setting" class="wifi-setting hidden">
-      <label>SSID:
-        <input type="text" id="wifi-ssid" placeholder="Nama WiFi">
-      </label>
-      <label>Password:
-        <input type="password" id="wifi-password" placeholder="Password WiFi">
-      </label>
-      <button onclick="toggleForm('wifi', 'close')">CANCEL</button>
-      <button onclick="submitWiFiForm()">CONNECT</button>
-    </div>
-    
+
     <div id="schedule-setting" class="schedule-setting hidden">
       <div id="schedule-list" class="schedule-list"></div>
       <div class="vertical-text" onclick="closeScheduleList()">TUTUP</div>
     </div>
   </div>
+</body>
